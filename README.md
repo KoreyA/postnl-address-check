@@ -3,7 +3,7 @@ PostNL Address Check (Netlify Function)
 This project provides a secure serverless proxy for validating addresses using the PostNL Adrescheck Benelux API.
 It runs on Netlify Functions, so your PostNL API key is never exposed in client-side code.
 
-Features
+# Features
 
 Secure. API keys never exposed publicly.
 
@@ -17,7 +17,7 @@ Anti-abuse. Requires a shared X-Client-Token header.
 
 Simple deploy. Just push to GitHub and connect Netlify.
 
-Endpoint
+# Endpoint
 POST /.netlify/functions/address-check
 
 Required Headers
@@ -34,7 +34,7 @@ JSON Request Body
 }
 
 
-Required:
+# Required:
 
 postalCode
 
@@ -48,7 +48,7 @@ streetName
 
 houseNumberAddition
 
-Example Responses
+# Example Responses
 Valid Address
 {
   "valid": true,
@@ -62,7 +62,7 @@ Valid Address
   }
 }
 
-No Match
+# No Match
 {
   "valid": false,
   "results": []
@@ -70,12 +70,13 @@ No Match
 
 Environment Variables (Netlify)
 
-Add these in Site Settings → Environment variables.
+# Add these in Site Settings → Environment variables.
 
 Variable	Description
 POSTNL_API_KEY	Your PostNL API key (sandbox or production)
 POSTNL_BASE_URL	API base URL (defaults to sandbox)
 CLIENT_TOKEN	Shared token required in requests
+
 Sandbox Example
 POSTNL_BASE_URL=https://api-sandbox.postnl.nl/v2
 POSTNL_API_KEY=<sandbox-key>
@@ -86,7 +87,7 @@ POSTNL_BASE_URL=https://api.postnl.nl/v2
 POSTNL_API_KEY=<production-key>
 CLIENT_TOKEN=<your-client-token>
 
-Deployment
+# Deployment
 
 Push this repo to GitHub.
 
@@ -96,7 +97,7 @@ Add environment variables.
 
 Redeploy the site.
 
-Test with curl:
+# Test with curl:
 
 Windows CMD
 curl -X POST "https://your-site.netlify.app/.netlify/functions/address-check" ^
@@ -110,7 +111,7 @@ curl -X POST "https://your-site.netlify.app/.netlify/functions/address-check" \
   -H "X-Client-Token: <your-client-token>" \
   -d '{"postalCode":"1014 AK","houseNumber":"102"}'
 
-Local Development
+# Local Development
 
 Install Netlify CLI:
 
