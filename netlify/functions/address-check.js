@@ -1,10 +1,16 @@
-// const fetch = require('node-fetch');
+// const fetch = require('node-fetch'); // not needed on Netlify (Node 18+)
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Client-Token',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
+
+const EXPECTED_TOKEN = process.env.CLIENT_TOKEN;
+
+const POSTNL_BASE_URL =
+  process.env.POSTNL_BASE_URL || 'https://api-sandbox.postnl.nl/v2';
+
 
 exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -21,6 +27,21 @@ exports.handler = async (event, context) => {
       headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
+  }
+
+  // Tiny anti-abuse: shared token required if configured
+  if (EXPECTED_TOKEN) {
+    const headers = event.headers || {};
+    // headers keys are lowercased by Netlify
+    const token = headers['x-client-token'];
+
+    if (!token || token !== EXPECTED_TOKEN) {
+      return {
+        statusCode: 401,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Unauthorized' })
+      };
+    }
   }
 
   try {
@@ -50,7 +71,6 @@ exports.handler = async (event, context) => {
     params.append('postalCode', cleanedPostcode);
     params.append('houseNumber', String(houseNumber).trim());
 
-    // use destructured vars for consistency
     if (cityName) params.append('cityName', cityName.trim());
     if (streetName) params.append('streetName', streetName.trim());
     if (houseNumberAddition) {
@@ -60,9 +80,11 @@ exports.handler = async (event, context) => {
     // Prod URL:
     // const url = `https://api.postnl.nl/v2/address/benelux?${params.toString()}`;
     // Sandbox URL:
-    const url = `https://api-sandbox.postnl.nl/v2/address/benelux?${params.toString()}`;
+    // const url = `https://api-sandbox.postnl.nl/v2/address/benelux?${params.toString()}`;
 
-    // Optional: log URL for initial debugging, then remove
+    const url = `${POSTNL_BASE_URL}/address/benelux?${params.toString()}`;
+
+
     // console.log('PostNL URL:', url);
 
     const apiRes = await fetch(url, {
@@ -76,6 +98,7 @@ exports.handler = async (event, context) => {
     const data = await apiRes.json().catch(() => null);
 
     if (!apiRes.ok) {
+      console.error('PostNL error', apiRes.status, data);
       return {
         statusCode: apiRes.status,
         headers: corsHeaders,
@@ -89,6 +112,10 @@ exports.handler = async (event, context) => {
 
     const results = Array.isArray(data) ? data : [];
     const best = results[0] || null;
+
+    if (!best) {
+      console.warn('No address match for', { postalCode: cleanedPostcode, houseNumber });
+    }
 
     const responseBody = !best
       ? { valid: false, results: [] }
