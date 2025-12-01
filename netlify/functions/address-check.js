@@ -1,15 +1,23 @@
 // const fetch = require('node-fetch'); // not needed on Netlify (Node 18+)
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, X-Client-Token',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS'
-};
+
 
 const EXPECTED_TOKEN = process.env.CLIENT_TOKEN;
 
 const POSTNL_BASE_URL =
   process.env.POSTNL_BASE_URL || 'https://api-sandbox.postnl.nl/v2';
+
+// Allowed origins, comma separated: "https://site1.com,https://site2.com"
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Client-Token',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+};
 
 
 exports.handler = async (event, context) => {
