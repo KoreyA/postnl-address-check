@@ -16,7 +16,7 @@ const makeCorsHeaders = (event) => {
   const headers = event.headers || {};
   const requestOrigin = headers.origin || headers.Origin || '';
 
-  // Default: allow all if no allow list configured
+  // No allow list configured, allow everything
   if (!ALLOWED_ORIGINS.length) {
     return {
       'Access-Control-Allow-Origin': '*',
@@ -25,12 +25,12 @@ const makeCorsHeaders = (event) => {
     };
   }
 
-  // If origin is in allow list, echo it back. Otherwise, use first allowed.
-  const allowedOrigin = (
-    requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)
-  )
-    ? requestOrigin
-    : ALLOWED_ORIGINS[0];
+  let allowedOrigin = '*';
+
+  // If origin is in the allow-list, echo it back
+  if (requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)) {
+    allowedOrigin = requestOrigin;
+  }
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
@@ -38,6 +38,7 @@ const makeCorsHeaders = (event) => {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 };
+
 
 exports.handler = async (event, context) => {
   const corsHeaders = makeCorsHeaders(event);
