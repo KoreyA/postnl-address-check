@@ -1,7 +1,5 @@
 // const fetch = require('node-fetch'); // not needed on Netlify (Node 18+)
 
-
-
 const EXPECTED_TOKEN = process.env.CLIENT_TOKEN;
 
 const POSTNL_BASE_URL =
@@ -13,14 +11,37 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .map(o => o.trim())
   .filter(Boolean);
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, X-Client-Token',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+// Build CORS headers based on request origin + allow list
+const makeCorsHeaders = (event) => {
+  const headers = event.headers || {};
+  const requestOrigin = headers.origin || headers.Origin || '';
+
+  // Default: allow all if no allow list configured
+  if (!ALLOWED_ORIGINS.length) {
+    return {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Client-Token',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    };
+  }
+
+  // If origin is in allow list, echo it back. Otherwise, use first allowed.
+  const allowedOrigin = (
+    requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)
+  )
+    ? requestOrigin
+    : ALLOWED_ORIGINS[0];
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'Content-Type, X-Client-Token',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
 };
 
-
 exports.handler = async (event, context) => {
+  const corsHeaders = makeCorsHeaders(event);
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
@@ -85,15 +106,7 @@ exports.handler = async (event, context) => {
       params.append('houseNumberAddition', houseNumberAddition.trim());
     }
 
-    // Prod URL:
-    // const url = `https://api.postnl.nl/v2/address/benelux?${params.toString()}`;
-    // Sandbox URL:
-    // const url = `https://api-sandbox.postnl.nl/v2/address/benelux?${params.toString()}`;
-
     const url = `${POSTNL_BASE_URL}/address/benelux?${params.toString()}`;
-
-
-    // console.log('PostNL URL:', url);
 
     const apiRes = await fetch(url, {
       method: 'GET',
