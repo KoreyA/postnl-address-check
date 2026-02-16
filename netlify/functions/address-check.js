@@ -151,6 +151,7 @@ exports.handler = async (event, context) => {
           city: best.cityName,
           postalCode: best.postalCode,
           houseNumber: best.houseNumber,
+          province: best.stateName || '',
           houseNumberAddition: best.houseNumberAddition || ''
         }
       };
