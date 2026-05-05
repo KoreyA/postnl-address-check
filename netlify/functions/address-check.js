@@ -136,7 +136,7 @@ exports.handler = async (event, context) => {
     const best = results[0] || null;
 
     if (!best) {
-      console.warn('No address match for', { postalCode: cleanedPostcode, houseNumber });
+      console.warn('No address match');
     }
 
     const responseBody = !best
